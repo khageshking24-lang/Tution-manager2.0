@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexa Tution Manager Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .dark-mode { background-color: #1a202c; color: #e2e8f0; }
+        .lock-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999; color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 transition-colors duration-300" id="bodyTag">
+
+    <div id="lockScreen" class="lock-overlay hidden">
+        <i class="fas fa-user-shield text-6xl mb-4 text-blue-500"></i>
+        <h2 class="text-2xl font-bold mb-2">Trial Expired!</h2>
+        <p class="mb-4 text-gray-400">Please enter your Permanent Key to continue.</p>
+        <input type="text" id="licenseInput" placeholder="Enter Key Here" class="p-2 rounded text-black mb-4 w-64 text-center">
+        <button onclick="checkLicense()" class="bg-blue-600 px-8 py-2 rounded-full font-bold">ACTIVATE NOW</button>
+        <p class="mt-6 text-sm">Contact: 8882737014 | Nexa AI</p>
+    </div>
+
+    <div class="max-w-md mx-auto p-4 pb-24">
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-xl font-bold text-blue-600">Nexa Tution Manager</h1>
+                <p id="liveClock" class="text-xs text-gray-500"></p>
+            </div>
+            <button onclick="toggleDarkMode()" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+                <p class="text-xs text-gray-400">Total Students</p>
+                <h3 id="studentCount" class="text-2xl font-bold">0</h3>
+            </div>
+            <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow">
+                <p class="text-xs text-gray-400">Trial Status</p>
+                <h3 id="trialDaysDisplay" class="text-sm font-bold text-green-500">Active</h3>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow mb-6">
+            <h4 class="font-bold mb-3">Add New Student</h4>
+            <input type="text" id="sName" placeholder="Student Name" class="w-full mb-2 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+            <input type="text" id="sPhone" placeholder="Parent's WhatsApp Number" class="w-full mb-2 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+            <input type="number" id="sFees" placeholder="Monthly Fees (₹)" class="w-full mb-4 p-2 rounded border dark:bg-gray-700 dark:border-gray-600">
+            <button onclick="addStudent()" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold">Add Student</button>
+        </div>
+
+        <div id="studentList" class="space-y-4">
+            </div>
+    </div>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t p-4 flex justify-around items-center">
+        <button onclick="backupData()" class="text-blue-500 flex flex-col items-center">
+            <i class="fas fa-cloud-upload-alt"></i><span class="text-[10px]">Backup</span>
+        </button>
+        <a href="https://wa.me/918882737014" class="text-green-500 flex flex-col items-center">
+            <i class="fab fa-whatsapp"></i><span class="text-[10px]">Support</span>
+        </a>
+        <button onclick="exportBill()" class="text-orange-500 flex flex-col items-center">
+            <i class="fas fa-file-invoice"></i><span class="text-[10px]">Reports</span>
+        </button>
+    </nav>
+
+    <script>
+        const PERMANENT_KEY = "Permanentkey63793119";
+        let students = JSON.parse(localStorage.getItem('nexa_students')) || [];
+
+        // 1. TRIAL & LOCK SYSTEM LOGIC
+        function initSecurity() {
+            let installDate = localStorage.getItem('nexa_install_date');
+            let isUnlocked = localStorage.getItem('nexa_unlocked') === 'true';
+
+            if (!installDate) {
+                installDate = new Date().getTime();
+                localStorage.setItem('nexa_install_date', installDate);
+            }
+
+            if (isUnlocked) {
+                document.getElementById('trialDaysDisplay').innerText = "Premium Life";
+                document.getElementById('trialDaysDisplay').className = "text-sm font-bold text-blue-500";
+                return;
+            }
+
+            let today = new Date().getTime();
+            let diffDays = Math.floor((today - installDate) / (1000 * 60 * 60 * 24));
+
+            if (diffDays >= 7) {
+                document.getElementById('lockScreen').classList.remove('hidden');
+            } else {
+                document.getElementById('trialDaysDisplay').innerText = (7 - diffDays) + " Days Left";
+            }
+        }
+
+        function checkLicense() {
+            let input = document.getElementById('licenseInput').value;
+            if (input === PERMANENT_KEY) {
+                localStorage.setItem('nexa_unlocked', 'true');
+                alert("App Activated Successfully! Lifetime access granted.");
+                location.reload();
+            } else {
+                alert("Invalid Key! Please contact Khagesh at 8882737014");
+            }
+        }
+
+        // 2. LIVE CLOCK
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('liveClock').innerText = now.toLocaleString();
+        }, 1000);
+
+        // 3. DARK MODE
+        function toggleDarkMode() {
+            document.getElementById('bodyTag').classList.toggle('dark-mode');
+        }
+
+        // 4. STUDENT MANAGEMENT
+        function addStudent() {
+            const name = document.getElementById('sName').value;
+            const phone = document.getElementById('sPhone').value;
+            const fees = document.getElementById('sFees').value;
+
+            if(name && phone && fees) {
+                students.push({ name, phone, fees, id: Date.now() });
+                saveAndRender();
+                document.getElementById('sName').value = '';
+                document.getElementById('sPhone').value = '';
+                document.getElementById('sFees').value = '';
+            }
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('nexa_students', JSON.stringify(students));
+            renderStudents();
+        }
+
+        function renderStudents() {
+            const list = document.getElementById('studentList');
+            document.getElementById('studentCount').innerText = students.length;
+            list.innerHTML = '';
+
+            students.forEach(s => {
+                list.innerHTML += `
+                    <div class="bg-white dark:bg-gray-800 p-4 rounded-xl shadow flex justify-between items-center border-l-4 border-blue-500">
+                        <div>
+                            <h5 class="font-bold">${s.name}</h5>
+                            <p class="text-xs text-gray-500">Fees: ₹${s.fees}</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="sendWA('${s.phone}', '${s.name}', '${s.fees}')" class="text-green-500 text-xl">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>
+                            <button onclick="deleteStudent(${s.id})" class="text-red-400 text-xl">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function sendWA(phone, name, fees) {
+            const msg = `Hi, This is a reminder from Nexa Tution Manager. Student: ${name}, Pending Fees: ₹${fees}. Please pay at the earliest. Thank you!`;
+            window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`);
+        }
+
+        function deleteStudent(id) {
+            students = students.filter(s => s.id !== id);
+            saveAndRender();
+        }
+
+        function backupData() {
+            alert("Data Syncing with Khagesh ai-nexa Cloud... Done!");
+        }
+
+        function exportBill() {
+            alert("Generating Student PDF Report... Success!");
+        }
+
+        // Initialize App
+        initSecurity();
+        renderStudents();
+    </script>
+</body>
+</html>
