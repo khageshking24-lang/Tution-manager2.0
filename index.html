@@ -1,167 +1,134 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexa Tution Pro | Premium Edition</title>
+    <title>Nexa ERP Pro | Unlimited School Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #f8fafc; }
-        .dark-mode { --bg: #0f172a; color: white; }
-        body { background-color: var(--bg); font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .dark-mode .glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255,255,255,0.05); }
-        .lock-overlay { position: fixed; inset: 0; background: #0f172a; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap');
+        body { font-family: 'Outfit', sans-serif; background: #f0f4f8; padding-bottom: 80px; }
+        .glass { background: white; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        .unlimited-badge { background: linear-gradient(90deg, #059669, #10b981); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
+        .input-school { border: 1.5px solid #e2e8f0; border-radius: 15px; padding: 12px; width: 100%; outline: none; margin-bottom: 10px; }
     </style>
 </head>
-<body id="appBody">
+<body>
 
-    <div id="activationScreen" class="lock-overlay">
-        <div class="glass p-8 rounded-3xl w-80 text-center shadow-2xl">
-            <div class="w-20 h-20 bg-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-indigo-500/50">
-                <i class="fas fa-key text-3xl text-white"></i>
-            </div>
-            <h2 class="text-xl font-bold text-white mb-2">Activate Nexa Pro</h2>
-            <p class="text-gray-400 text-xs mb-6">Enter Trial or Permanent Key</p>
-            <input type="text" id="keyInput" placeholder="Enter Key Here" class="w-full bg-slate-800 border-none rounded-xl p-3 text-white text-center mb-4 focus:ring-2 focus:ring-indigo-500">
-            <button onclick="activateApp()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all">Activate</button>
-            <p class="mt-6 text-[10px] text-gray-500">For keys, contact your software provider.</p>
-        </div>
-    </div>
-
-    <div class="max-w-md mx-auto p-6">
-        <header class="flex justify-between items-center mb-8">
+    <div class="max-w-md mx-auto p-4">
+        <header class="flex justify-between items-center mb-6 pt-2">
             <div>
-                <span class="text-[10px] font-bold tracking-widest text-indigo-500 uppercase">Premium Management</span>
-                <h1 class="text-2xl font-black text-slate-800 dark:text-white">Tution Manager</h1>
+                <h1 class="text-2xl font-black text-blue-700">ERP <span class="text-indigo-600">PRO</span></h1>
+                <span class="unlimited-badge uppercase tracking-tighter"><i class="fas fa-infinity"></i> Unlimited Storage Active</span>
             </div>
-            <button onclick="toggleTheme()" class="w-10 h-10 rounded-xl glass flex items-center justify-center">
-                <i class="fas fa-moon text-indigo-500"></i>
-            </button>
+            <button onclick="downloadBackup()" class="w-10 h-10 glass flex items-center justify-center text-blue-600"><i class="fas fa-database"></i></button>
         </header>
 
-        <div class="grid grid-cols-2 gap-4 mb-8">
-            <div class="glass p-5 rounded-3xl shadow-sm">
-                <div class="text-indigo-500 mb-2"><i class="fas fa-users"></i></div>
-                <div class="text-2xl font-bold" id="totalStudents">0</div>
-                <div class="text-[10px] text-gray-400 uppercase">Students</div>
+        <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="glass p-4 border-l-4 border-blue-600">
+                <p class="text-[9px] font-black opacity-50 uppercase tracking-widest">Total Students</p>
+                <p id="totalStud" class="text-xl font-black">0</p>
             </div>
-            <div class="glass p-5 rounded-3xl shadow-sm border-b-4 border-indigo-500">
-                <div class="text-indigo-500 mb-2"><i class="fas fa-clock"></i></div>
-                <div class="text-sm font-bold" id="statusLabel">Checking...</div>
-                <div class="text-[10px] text-gray-400 uppercase">License</div>
+            <div class="glass p-4 border-l-4 border-emerald-500">
+                <p class="text-[9px] font-black opacity-50 uppercase tracking-widest">Fees Collected</p>
+                <p id="totalFees" class="text-xl font-black text-emerald-600">₹0</p>
             </div>
         </div>
 
-        <div class="glass p-6 rounded-3xl mb-8 shadow-sm">
-            <h3 class="text-sm font-bold mb-4 flex items-center gap-2">
-                <i class="fas fa-plus-circle text-indigo-500"></i> Add Student
-            </h3>
-            <div class="space-y-3">
-                <input type="text" id="name" placeholder="Name" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-1 focus:ring-indigo-500 outline-none">
-                <input type="text" id="phone" placeholder="WhatsApp (without +91)" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-1 focus:ring-indigo-500 outline-none">
-                <input type="number" id="fees" placeholder="Monthly Fees" class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border-none focus:ring-1 focus:ring-indigo-500 outline-none">
-                <button onclick="saveStudent()" class="w-full bg-slate-900 dark:bg-indigo-600 text-white font-bold py-3 rounded-xl mt-2 shadow-lg">Save Record</button>
-            </div>
+        <div class="glass p-6 mb-4">
+            <h3 class="font-black text-blue-800 mb-4 uppercase text-xs"><i class="fas fa-user-plus mr-2"></i> New Student Admission</h3>
+            <input type="text" id="sName" placeholder="Student Full Name" class="input-school">
+            <input type="text" id="sClass" placeholder="Class & Section" class="input-school">
+            <input type="number" id="sFees" placeholder="Monthly Fees ₹" class="input-school">
+            <button onclick="enrollStudent()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase shadow-lg active:scale-95 transition">Enroll To Database</button>
         </div>
 
-        <div id="listContainer" class="space-y-4"></div>
+        <div id="studentList" class="space-y-3">
+            </div>
     </div>
 
     <script>
-        const PERMANENT_KEY = "Permanentkey63793119";
-        const TRIAL_KEY = "TRIAL-7DAY";
-        let students = JSON.parse(localStorage.getItem('nexa_pro_students')) || [];
+        // INDEXEDDB ENGINE FOR UNLIMITED SCHOOL DATA
+        const dbName = "NexaSchoolERP";
+        let db;
 
-        function activateApp() {
-            const input = document.getElementById('keyInput').value;
-            const now = new Date().getTime();
+        const request = indexedDB.open(dbName, 1);
+        request.onupgradeneeded = (e) => {
+            db = e.target.result;
+            if (!db.objectStoreNames.contains("students")) db.createObjectStore("students", { keyPath: "id", autoIncrement: true });
+        };
 
-            if (input === PERMANENT_KEY) {
-                localStorage.setItem('nexa_status', 'permanent');
-                location.reload();
-            } else if (input === TRIAL_KEY) {
-                localStorage.setItem('nexa_status', 'trial');
-                localStorage.setItem('nexa_start', now);
-                location.reload();
-            } else {
-                alert("Invalid Key! Please contact support.");
-            }
+        request.onsuccess = (e) => {
+            db = e.target.result;
+            loadStudents();
+            console.log("ERP Storage System Ready!");
+        };
+
+        function enrollStudent() {
+            const name = document.getElementById('sName').value;
+            const cls = document.getElementById('sClass').value;
+            const fees = Number(document.getElementById('sFees').value);
+
+            if(!name || !fees) return alert("Fill all details!");
+
+            const tx = db.transaction(["students"], "readwrite");
+            const store = tx.objectStore("students");
+            store.add({ name, cls, fees, date: new Date().toLocaleDateString() });
+
+            tx.oncomplete = () => {
+                alert("Student Admitted Successfully!");
+                document.getElementById('sName').value = '';
+                document.getElementById('sFees').value = '';
+                loadStudents();
+            };
         }
 
-        function checkSecurity() {
-            const status = localStorage.getItem('nexa_status');
-            const start = localStorage.getItem('nexa_start');
-            const screen = document.getElementById('activationScreen');
-            const statusLabel = document.getElementById('statusLabel');
+        function loadStudents() {
+            const tx = db.transaction(["students"], "readonly");
+            const store = tx.objectStore("students");
+            const request = store.getAll();
 
-            if (status === 'permanent') {
-                screen.classList.add('hidden');
-                statusLabel.innerText = "Lifetime";
-            } else if (status === 'trial') {
-                const now = new Date().getTime();
-                const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-                if (diff >= 7) {
-                    localStorage.removeItem('nexa_status');
-                    screen.classList.remove('hidden');
-                } else {
-                    screen.classList.add('hidden');
-                    statusLabel.innerText = (7 - diff) + " Days Left";
-                }
-            }
-        }
+            request.onsuccess = () => {
+                const students = request.result;
+                document.getElementById('totalStud').innerText = students.length;
+                let feesTotal = students.reduce((sum, s) => sum + s.fees, 0);
+                document.getElementById('totalFees').innerText = "₹" + feesTotal;
 
-        function toggleTheme() { document.getElementById('appBody').classList.toggle('dark-mode'); }
-
-        function saveStudent() {
-            const n = document.getElementById('name').value;
-            const p = document.getElementById('phone').value;
-            const f = document.getElementById('fees').value;
-            if(n && p && f) {
-                students.push({ n, p, f, id: Date.now() });
-                localStorage.setItem('nexa_pro_students', JSON.stringify(students));
-                location.reload();
-            }
-        }
-
-        function render() {
-            const cont = document.getElementById('listContainer');
-            document.getElementById('totalStudents').innerText = students.length;
-            students.forEach(s => {
-                cont.innerHTML += `
-                    <div class="glass p-4 rounded-2xl flex justify-between items-center animate-fade-in">
+                document.getElementById('studentList').innerHTML = students.map(s => `
+                    <div class="glass p-4 flex justify-between items-center animate-fade-in">
                         <div>
-                            <div class="font-bold text-sm">${s.n}</div>
-                            <div class="text-[10px] text-gray-500 font-medium tracking-tight">FEES: ₹${s.f}</div>
+                            <p class="font-black text-blue-900">${s.name}</p>
+                            <p class="text-[10px] opacity-60 font-bold uppercase">${s.cls}</p>
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="sendWA('${s.p}', '${s.n}', '${s.f}')" class="w-9 h-9 rounded-full bg-green-500/10 text-green-500 flex items-center justify-center">
-                                <i class="fab fa-whatsapp"></i>
-                            </button>
-                            <button onclick="del(${s.id})" class="w-9 h-9 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                        <div class="text-right">
+                            <p class="text-emerald-600 font-black">₹${s.fees}</p>
+                            <button onclick="deleteStudent(${s.id})" class="text-[10px] text-red-500 font-black uppercase">Remove</button>
                         </div>
                     </div>
-                `;
-            });
+                `).join('');
+            };
         }
 
-        function sendWA(p, n, f) {
-            const m = `Hello ${n}, this is a reminder for your pending fees of ₹${f}. - Nexa Tution Pro`;
-            window.open(`https://wa.me/91${p}?text=${encodeURIComponent(m)}`);
+        function deleteStudent(id) {
+            if(confirm("Are you sure?")) {
+                const tx = db.transaction(["students"], "readwrite");
+                tx.objectStore("students").delete(id);
+                tx.oncomplete = () => loadStudents();
+            }
         }
 
-        function del(id) {
-            students = students.filter(x => x.id !== id);
-            localStorage.setItem('nexa_pro_students', JSON.stringify(students));
-            location.reload();
+        function downloadBackup() {
+            const tx = db.transaction(["students"], "readonly");
+            tx.objectStore("students").getAll().onsuccess = (e) => {
+                const blob = new Blob([JSON.stringify(e.target.result)], {type: 'application/json'});
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `School_Data_Backup_${Date.now()}.json`;
+                a.click();
+            };
         }
-
-        checkSecurity();
-        render();
     </script>
 </body>
-                    </html>
-                    
+        </html>
+        
