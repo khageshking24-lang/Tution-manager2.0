@@ -3,15 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexa ERP Pro | Unlimited School Edition</title>
+    <title>Nexa ERP Pro | Unlimited Tuition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700;900&display=swap');
-        body { font-family: 'Outfit', sans-serif; background: #f0f4f8; padding-bottom: 80px; }
-        .glass { background: white; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
-        .unlimited-badge { background: linear-gradient(90deg, #059669, #10b981); color: white; padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 900; }
-        .input-school { border: 1.5px solid #e2e8f0; border-radius: 15px; padding: 12px; width: 100%; outline: none; margin-bottom: 10px; }
+        body { font-family: 'Outfit', sans-serif; background: #f8fafc; color: #1e293b; padding-bottom: 90px; }
+        .glass { background: white; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.05); }
+        .unlimited-tag { background: linear-gradient(90deg, #10b981, #059669); color: white; padding: 3px 10px; border-radius: 10px; font-size: 10px; font-weight: 900; }
+        .input-erp { background: #f1f5f9; border: 1.5px solid transparent; border-radius: 16px; padding: 14px; width: 100%; outline: none; transition: 0.3s; }
+        .input-erp:focus { border-color: #3b82f6; background: white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .tab-content { display: none; }
+        .active-tab { display: block; animation: fadeInUp 0.4s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -19,116 +25,166 @@
     <div class="max-w-md mx-auto p-4">
         <header class="flex justify-between items-center mb-6 pt-2">
             <div>
-                <h1 class="text-2xl font-black text-blue-700">ERP <span class="text-indigo-600">PRO</span></h1>
-                <span class="unlimited-badge uppercase tracking-tighter"><i class="fas fa-infinity"></i> Unlimited Storage Active</span>
+                <h1 class="text-2xl font-black text-blue-700 tracking-tighter">NEXA ERP <span class="text-indigo-600">PRO</span></h1>
+                <span class="unlimited-tag uppercase tracking-widest"><i class="fas fa-infinity mr-1"></i> Unlimited Storage</span>
             </div>
-            <button onclick="downloadBackup()" class="w-10 h-10 glass flex items-center justify-center text-blue-600"><i class="fas fa-database"></i></button>
+            <div class="flex gap-2">
+                <button onclick="exportERPData()" class="w-11 h-11 glass flex items-center justify-center text-blue-600 shadow-sm"><i class="fas fa-file-export"></i></button>
+            </div>
         </header>
 
-        <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="glass p-4 border-l-4 border-blue-600">
-                <p class="text-[9px] font-black opacity-50 uppercase tracking-widest">Total Students</p>
-                <p id="totalStud" class="text-xl font-black">0</p>
+        <div id="dashTab" class="tab-content active-tab">
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="glass p-5 border-l-8 border-blue-600">
+                    <p class="text-[9px] font-black opacity-50 uppercase tracking-widest">Active Students</p>
+                    <p id="statStud" class="text-2xl font-black">0</p>
+                </div>
+                <div class="glass p-5 border-l-8 border-emerald-500">
+                    <p class="text-[9px] font-black opacity-50 uppercase tracking-widest">Total Fees</p>
+                    <p id="statFees" class="text-2xl font-black text-emerald-600">₹0</p>
+                </div>
             </div>
-            <div class="glass p-4 border-l-4 border-emerald-500">
-                <p class="text-[9px] font-black opacity-50 uppercase tracking-widest">Fees Collected</p>
-                <p id="totalFees" class="text-xl font-black text-emerald-600">₹0</p>
+
+            <div class="glass p-6 mb-4">
+                <h3 class="font-black text-blue-900 mb-4 uppercase text-xs tracking-widest">Student Admission</h3>
+                <input type="text" id="sName" placeholder="Full Name" class="input-erp mb-3">
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="sBatch" placeholder="Batch/Class" class="input-erp w-2/3">
+                    <input type="number" id="sFee" placeholder="Fee ₹" class="input-erp w-1/3">
+                </div>
+                <button onclick="saveStudent()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase shadow-lg active:scale-95 transition">Enroll To Database</button>
             </div>
+            
+            <div id="studentList" class="space-y-3"></div>
         </div>
 
-        <div class="glass p-6 mb-4">
-            <h3 class="font-black text-blue-800 mb-4 uppercase text-xs"><i class="fas fa-user-plus mr-2"></i> New Student Admission</h3>
-            <input type="text" id="sName" placeholder="Student Full Name" class="input-school">
-            <input type="text" id="sClass" placeholder="Class & Section" class="input-school">
-            <input type="number" id="sFees" placeholder="Monthly Fees ₹" class="input-school">
-            <button onclick="enrollStudent()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-black uppercase shadow-lg active:scale-95 transition">Enroll To Database</button>
-        </div>
-
-        <div id="studentList" class="space-y-3">
+        <div id="feesTab" class="tab-content">
+            <div class="glass p-6 mb-4 border-t-8 border-indigo-600">
+                <h3 class="font-black text-indigo-700 mb-4 uppercase text-xs">Generate Fee Receipt</h3>
+                <select id="studSelect" class="input-erp mb-4 font-bold"></select>
+                <button onclick="generateReceipt()" class="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase shadow-lg">Print Professional Receipt</button>
             </div>
+        </div>
     </div>
 
+    <nav class="fixed bottom-0 left-0 right-0 glass m-4 mb-6 flex justify-around p-3 shadow-2xl border border-white/20">
+        <button onclick="switchTab('dashTab', this)" class="text-blue-600 text-xl p-2"><i class="fas fa-users"></i><p class="text-[8px] font-black uppercase mt-1">Students</p></button>
+        <button onclick="switchTab('feesTab', this)" class="text-slate-400 text-xl p-2"><i class="fas fa-receipt"></i><p class="text-[8px] font-black uppercase mt-1">Fees</p></button>
+    </nav>
+
     <script>
-        // INDEXEDDB ENGINE FOR UNLIMITED SCHOOL DATA
-        const dbName = "NexaSchoolERP";
+        // 🏗️ INDEXEDDB UNLIMITED ENGINE
+        const dbName = "NexaERP_UnlimitedDB";
         let db;
 
         const request = indexedDB.open(dbName, 1);
         request.onupgradeneeded = (e) => {
             db = e.target.result;
-            if (!db.objectStoreNames.contains("students")) db.createObjectStore("students", { keyPath: "id", autoIncrement: true });
+            if (!db.objectStoreNames.contains("students")) {
+                db.createObjectStore("students", { keyPath: "id", autoIncrement: true });
+            }
         };
 
         request.onsuccess = (e) => {
             db = e.target.result;
-            loadStudents();
-            console.log("ERP Storage System Ready!");
+            refreshData();
+            console.log("Unlimited ERP Storage Ready!");
         };
 
-        function enrollStudent() {
-            const name = document.getElementById('sName').value;
-            const cls = document.getElementById('sClass').value;
-            const fees = Number(document.getElementById('sFees').value);
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active-tab'));
+            document.getElementById(id).classList.add('active-tab');
+            document.querySelectorAll('nav button').forEach(b => b.classList.replace('text-blue-600', 'text-slate-400'));
+            btn.classList.replace('text-slate-400', 'text-blue-600');
+        }
 
-            if(!name || !fees) return alert("Fill all details!");
+        function saveStudent() {
+            const name = document.getElementById('sName').value;
+            const batch = document.getElementById('sBatch').value;
+            const fee = Number(document.getElementById('sFee').value);
+
+            if(!name || !fee) return alert("Please fill details!");
 
             const tx = db.transaction(["students"], "readwrite");
             const store = tx.objectStore("students");
-            store.add({ name, cls, fees, date: new Date().toLocaleDateString() });
+            store.add({ name, batch, fee, date: new Date().toLocaleDateString() });
 
             tx.oncomplete = () => {
-                alert("Student Admitted Successfully!");
                 document.getElementById('sName').value = '';
-                document.getElementById('sFees').value = '';
-                loadStudents();
+                document.getElementById('sFee').value = '';
+                refreshData();
+                checkBackupReminder();
             };
         }
 
-        function loadStudents() {
+        function refreshData() {
             const tx = db.transaction(["students"], "readonly");
             const store = tx.objectStore("students");
             const request = store.getAll();
 
             request.onsuccess = () => {
-                const students = request.result;
-                document.getElementById('totalStud').innerText = students.length;
-                let feesTotal = students.reduce((sum, s) => sum + s.fees, 0);
-                document.getElementById('totalFees').innerText = "₹" + feesTotal;
+                const data = request.result;
+                document.getElementById('statStud').innerText = data.length;
+                let total = data.reduce((sum, s) => sum + s.fee, 0);
+                document.getElementById('statFees').innerText = "₹" + total;
 
-                document.getElementById('studentList').innerHTML = students.map(s => `
-                    <div class="glass p-4 flex justify-between items-center animate-fade-in">
-                        <div>
-                            <p class="font-black text-blue-900">${s.name}</p>
-                            <p class="text-[10px] opacity-60 font-bold uppercase">${s.cls}</p>
-                        </div>
+                // Render List
+                document.getElementById('studentList').innerHTML = data.map(s => `
+                    <div class="glass p-4 flex justify-between items-center border-l-4 border-blue-500">
+                        <div><p class="font-black text-blue-900">${s.name}</p><p class="text-[10px] opacity-50 uppercase font-bold">${s.batch}</p></div>
                         <div class="text-right">
-                            <p class="text-emerald-600 font-black">₹${s.fees}</p>
-                            <button onclick="deleteStudent(${s.id})" class="text-[10px] text-red-500 font-black uppercase">Remove</button>
+                            <p class="font-black text-emerald-600">₹${s.fee}</p>
+                            <button onclick="removeStud(${s.id})" class="text-[9px] font-black text-red-400 uppercase">Remove</button>
                         </div>
                     </div>
                 `).join('');
+
+                // Update Select Dropdown
+                document.getElementById('studSelect').innerHTML = data.map(s => `<option value="${s.id}">${s.name} (${s.batch})</option>`).join('');
             };
         }
 
-        function deleteStudent(id) {
-            if(confirm("Are you sure?")) {
+        function removeStud(id) {
+            if(confirm("Confirm Student Removal?")) {
                 const tx = db.transaction(["students"], "readwrite");
                 tx.objectStore("students").delete(id);
-                tx.oncomplete = () => loadStudents();
+                tx.oncomplete = () => refreshData();
             }
         }
 
-        function downloadBackup() {
+        function generateReceipt() {
+            const id = Number(document.getElementById('studSelect').value);
+            const tx = db.transaction(["students"], "readonly");
+            tx.objectStore("students").get(id).onsuccess = (e) => {
+                const s = e.target.result;
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFontSize(22); doc.text("FEE RECEIPT", 105, 20, null, null, "center");
+                doc.setFontSize(12); doc.text(`Student: ${s.name}`, 14, 40);
+                doc.text(`Batch: ${s.batch}`, 14, 48);
+                doc.text(`Date: ${s.date}`, 14, 56);
+                doc.autoTable({ startY: 65, head: [['Description', 'Amount']], body: [['Monthly Tuition Fees', `INR ${s.fee}`]] });
+                doc.text(`Authorized Signatory: Khagesh AI-Nexa`, 14, doc.lastAutoTable.finalY + 20);
+                doc.save(`${s.name}_Receipt.pdf`);
+            };
+        }
+
+        function exportERPData() {
             const tx = db.transaction(["students"], "readonly");
             tx.objectStore("students").getAll().onsuccess = (e) => {
                 const blob = new Blob([JSON.stringify(e.target.result)], {type: 'application/json'});
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob);
-                a.download = `School_Data_Backup_${Date.now()}.json`;
+                a.download = `ERP_Unlimited_Backup.json`;
                 a.click();
             };
         }
+
+        function checkBackupReminder() {
+            let count = Number(localStorage.getItem('erp_counter') || 0) + 1;
+            localStorage.setItem('erp_counter', count);
+            if(count % 10 === 0) alert("🛡️ Nexa Security: 10 entries ho gayi hain, ek backup download kar lo!");
+        }
     </script>
 </body>
-        </html>
-        
+</html>
